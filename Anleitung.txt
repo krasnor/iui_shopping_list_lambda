@@ -1,0 +1,13 @@
+Anleitung
+# Vorraussetzungen
+1. Nodejs Server installieren
+2. alexa-skill-local packet installieren
+3. Mit cmd ins Projektverzeichnis
+3.1 dort npm install aufrufen
+
+# Zum Starten
+4. Mit cmd ins Projektverzeichnis
+4.1 Alexa skill starten:
+	alexa-skill-local -p 3001
+5. Angezeigte Seite aufrufen und einloggen
+6. (falls aufgefordert) ngrok-Url unter Endpoint auf Alexa skill eintragen/ändern
