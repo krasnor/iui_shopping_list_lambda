@@ -12,7 +12,7 @@ const LAUNCH_MESSAGE = 'Welcome to shopply. If you want to know what you can do,
 
 // ### API - Wrapper - HTTP
 // const http = require('http');
-// localhost:3000/fridge  - 'contents': { 'bananen':1, 'Milch':2 }
+// localhost:3000/contents  - 'contents': { 'bananen':1, 'Milch':2 }
 // localhost:3000/emotion -  'emotion': 'neutral' | 'angry' | 'happy'
 const fridgeBaseUrl = 'localhost';
 const fridgePort = 5000;
@@ -147,9 +147,7 @@ const AddItemIntentHandler = {
         let groceryItem = handlerInput.requestEnvelope.request.intent.slots.item.value;
         //var list = handlerInput.requestEnvelope.request.intent.slots.list.value;
         globalShoppingList.push(groceryItem);
-        //speakOutput = "I added " + groceryItem + " to your list. ## runnning locally ##" + REPROMPT;
-        let fridgeContents = await http_GetFridgeContents();
-        speakOutput = "I added " + groceryItem + " ## fridge contents: " + JSON.stringify(fridgeContents);
+        speakOutput = "I added " + groceryItem + " to your list. ## runnning locally ##" + REPROMPT;
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .reprompt(REPROMPT)
