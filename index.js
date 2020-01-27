@@ -46,6 +46,7 @@ function http_GetStatus() {
         request.end();
     }));
 }
+
 function http_GetFridgeContents() {
     return new Promise(((resolve, reject) => {
         let options = {
@@ -75,6 +76,7 @@ function http_GetFridgeContents() {
         request.end();
     }));
 }
+
 function http_GetUserEmotion() {
     return new Promise(((resolve, reject) => {
         let options = {
@@ -104,6 +106,7 @@ function http_GetUserEmotion() {
         request.end();
     }));
 }
+
 // ! this may take some seconds
 function http_CalculateUserEmotion() {
     return new Promise(((resolve, reject) => {
@@ -164,8 +167,8 @@ const RemoveItemIntentHandler = {
         let groceryItem = handlerInput.requestEnvelope.request.intent.slots.item.value;
 
         for (var i = 0; i < globalShoppingList.length; i++) {
-            if(globalShoppingList[i] === groceryItem){
-                globalShoppingList.splice(i,1);
+            if (globalShoppingList[i] === groceryItem) {
+                globalShoppingList.splice(i, 1);
             }
         }
 
@@ -186,7 +189,7 @@ const ReadListIntentHandler = {
         var speakOutput = 'In ReadListIntentHandler!';
         speakOutput = "On your list are the following items: ";
 
-        globalShoppingList.forEach(function(entry) {
+        globalShoppingList.forEach(function (entry) {
             speakOutput += entry + ", ";
         });
 
@@ -203,33 +206,31 @@ const SuggestItemsIntentHandler = {
     },
     async handle(handlerInput) {
         let speakOutput = 'You might need';
-        try{
+        try {
             //globalShoppingList.push('chocolate');
             let fridge_result = await http_GetFridgeContents();
-            let fridgeContents = fridge_result.contents;
-            // # im moment noch statisch
-            // wenn von einem item weiniger als 1 vorhanden, dann wird Kauf empfohlen
-            // Auf jeden Fall enthalten sollten: Milch, Eier, Schokolade
-
-            console.log(JSON.stringify(fridgeContents));
-
-            Object.entries(fridgeContents).forEach(([key, value]) => {
-                if(value < 1){
-                       speakOutput += ', ' + key;
-                }
-            });
-
-            // könnte man auch noch kürzer schrieben mit for loop und Items in Array
-            // if(!('Milch' in fridgeContents) || fridgeContents.Milch < 1)
-            //     speakOutput += ', milk';
-            // if(!('Eier' in fridgeContents) || fridgeContents.Eier < 1)
-            //     speakOutput += ', eggs';
-            // if(!('Schokolade' in fridgeContents) || fridgeContents.Schokolade < 1)
-            //     speakOutput += ', chocolate';
-            // if(!('Wein' in fridgeContents) || fridgeContents.Wein < 1)
-            //     speakOutput += ', wine';
-
-        } catch (e){
+            fridge_result
+                .then(function (value) {
+                    console.log(value); // "Success!"
+                    let fridgeContents = value.contents;
+                    // wenn von einem item weiniger als 1 vorhanden, dann wird Kauf empfohlen
+                    console.log(JSON.stringify(value));
+                    var nothing = true;
+                    Object.entries(fridgeContents).forEach(([key, value]) => {
+                        if (value < 1) {
+                            speakOutput += ', ' + key;
+                            nothing = false;
+                        }
+                    });
+                    if (nothing) {
+                        speakOutput = 'Your fridge is full.';
+                    }
+                })
+                .catch(function (e) {
+                    console.error(e); // "oh, no!"
+                    speakOutput = 'sorry there was an error with your request';
+                })
+        } catch (e) {
             speakOutput = 'sorry there was an error with your request';
             console.log(e);
         }
@@ -246,21 +247,29 @@ const SuggestActivityIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'SuggestActivityIntent';
     },
     async handle(handlerInput) {
+            console.log('# suggest activity');
         let speakOutput = 'You could watch an action movie';
 
         try {
             // let fridgeContents = await http_GetFridgeContents();
-            let emotion = 'Neutral';
+            let emotionFallback = 'Neutral';
+            let emotionResult = '';
             //emotion = await http_GetUserEmotion(); // poll last calculated emotion
-            emotion = await http_CalculateUserEmotion(); // diese Variante braucht einige sekunden (Keine Ahnung wie es sich mit Alexa verhält - timeouts etc.?)
+            emotionPromise = await http_CalculateUserEmotion(); // diese Variante braucht einige sekunden (Keine Ahnung wie es sich mit Alexa verhält - timeouts etc.?)
 
-            console.log('# suggest activity');
-            console.log(JSON.stringify(emotion));
+            emotionPromise.then(
+                function(val) {
+                    console.log(JSON.stringify(val));
+                    emotionResult = val.emotion;
+                }).catch(
+                    (reason) => {
+                        emotionResult = emotionFallback;
+                });
             let emotionBasedOptions = [''];
-            switch (emotion.emotion) {
+            switch (emotionResult) {
                 case 'Angry':
                     let options_angry = [
-                        'How abaout a warm bath?',
+                        'How about a warm bath?',
                         'Shall i play some music for you?', // calming music
                         'You could do some sport'
                     ];
@@ -297,7 +306,7 @@ const SuggestActivityIntentHandler = {
                     break;
                 case 'Surprise':
                     let options_surprised = [
-                        'Are you ok? You look upset. Did you break something?',
+                        'You seem surprised, is something wrong?',
                     ];
                     emotionBasedOptions = options_surprised;
                     break;
@@ -314,7 +323,7 @@ const SuggestActivityIntentHandler = {
             console.log(JSON.stringify(emotionBasedOptions));
             speakOutput = emotionBasedOptions[Math.floor(Math.random() * emotionBasedOptions.length)];
             console.log(speakOutput);
-        } catch(e){
+        } catch (e) {
             speakOutput = 'sorry there was an error with your request';
             console.log(e);
         }
