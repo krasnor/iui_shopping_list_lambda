@@ -212,15 +212,22 @@ const SuggestItemsIntentHandler = {
             // Auf jeden Fall enthalten sollten: Milch, Eier, Schokolade
 
             console.log(JSON.stringify(fridgeContents));
+
+            Object.entries(fridgeContents).forEach(([key, value]) => {
+                if(value < 1){
+                       speakOutput += ', ' + key;
+                }
+            });
+
             // könnte man auch noch kürzer schrieben mit for loop und Items in Array
-            if(!('Milch' in fridgeContents) || fridgeContents.Milch < 1)
-                speakOutput += ', milk';
-            if(!('Eier' in fridgeContents) || fridgeContents.Eier < 1)
-                speakOutput += ', eggs';
-            if(!('Schokolade' in fridgeContents) || fridgeContents.Schokolade < 1)
-                speakOutput += ', chocolate';
-            if(!('Wein' in fridgeContents) || fridgeContents.Wein < 1)
-                speakOutput += ', wine';
+            // if(!('Milch' in fridgeContents) || fridgeContents.Milch < 1)
+            //     speakOutput += ', milk';
+            // if(!('Eier' in fridgeContents) || fridgeContents.Eier < 1)
+            //     speakOutput += ', eggs';
+            // if(!('Schokolade' in fridgeContents) || fridgeContents.Schokolade < 1)
+            //     speakOutput += ', chocolate';
+            // if(!('Wein' in fridgeContents) || fridgeContents.Wein < 1)
+            //     speakOutput += ', wine';
 
         } catch (e){
             speakOutput = 'sorry there was an error with your request';
