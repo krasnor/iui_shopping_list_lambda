@@ -186,7 +186,6 @@ const ReadListIntentHandler = {
         var speakOutput = 'In ReadListIntentHandler!';
         speakOutput = "On your list are the following items: ";
 
-
         globalShoppingList.forEach(function(entry) {
             speakOutput += entry + ", ";
         });
@@ -204,27 +203,36 @@ const SuggestItemsIntentHandler = {
     },
     async handle(handlerInput) {
         let speakOutput = 'You might need';
-        //globalShoppingList.push('chocolate');
-        let fridge_result = await http_GetFridgeContents();
-        let fridgeContents = fridge_result.contents;
-        // # im moment noch statisch
-        // wenn von einem item weiniger als 1 vorhanden, dann wird Kauf empfohlen
-        // Auf jeden Fall enthalten sollten: Milch, Eier, Schokolade
+        try{
+            //globalShoppingList.push('chocolate');
+            let fridge_result = await http_GetFridgeContents();
+            let fridgeContents = fridge_result.contents;
+            // # im moment noch statisch
+            // wenn von einem item weiniger als 1 vorhanden, dann wird Kauf empfohlen
+            // Auf jeden Fall enthalten sollten: Milch, Eier, Schokolade
 
-        console.log(JSON.stringify(fridgeContents));
-        // könnte man auch noch kürzer schrieben mit for loop und Items in Array
-        if(!('Milch' in fridgeContents) || fridgeContents.Milch <= 1)
-            speakOutput += ', milk';
-        if(!('Eier' in fridgeContents) || fridgeContents.Eier <= 1)
-            speakOutput += ', eggs';
-        if(!('Schokolade' in fridgeContents) || fridgeContents.Schokolade <= 1)
-            speakOutput += ', chocolate';
+            console.log(JSON.stringify(fridgeContents));
+            // könnte man auch noch kürzer schrieben mit for loop und Items in Array
+            if(!('Milch' in fridgeContents) || fridgeContents.Milch < 1)
+                speakOutput += ', milk';
+            if(!('Eier' in fridgeContents) || fridgeContents.Eier < 1)
+                speakOutput += ', eggs';
+            if(!('Schokolade' in fridgeContents) || fridgeContents.Schokolade < 1)
+                speakOutput += ', chocolate';
+            if(!('Wein' in fridgeContents) || fridgeContents.Wein < 1)
+                speakOutput += ', wine';
+
+        } catch (e){
+            speakOutput = 'sorry there was an error with your request';
+            console.log(e);
+        }
 
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .getResponse();
     }
 };
+
 const SuggestActivityIntentHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
@@ -232,72 +240,77 @@ const SuggestActivityIntentHandler = {
     },
     async handle(handlerInput) {
         let speakOutput = 'You could watch an action movie';
-        // let fridgeContents = await http_GetFridgeContents();
-        let emotion = 'Neutral';
+
+        try {
+            // let fridgeContents = await http_GetFridgeContents();
+            let emotion = 'Neutral';
             //emotion = await http_GetUserEmotion(); // poll last calculated emotion
             emotion = await http_CalculateUserEmotion(); // diese Variante braucht einige sekunden (Keine Ahnung wie es sich mit Alexa verhält - timeouts etc.?)
 
-        console.log('# suggest activity');
-        console.log(JSON.stringify(emotion));
-        let emotionBasedOptions = [''];
-        switch (emotion) {
-            case 'Angry':
-                let options_angry = [
-                    'How abaout a warm bath?',
-                    'Shall i play some music for you?', // calming music
-                    'You could do some sport'
-                ];
-                emotionBasedOptions = options_angry;
-                break;
-            case 'Disgust':
-                let options_disgust = [
-                'You seem to not feel well. How about a cup of stomach tea?', // TODO wording
-                ];
-                emotionBasedOptions = options_disgust;
-                break;
-            case 'Fear':
-                let options_fear = [
-                    'How about a cup of camomile tea?',
-                ];
-                emotionBasedOptions = options_fear;
-                break;
-            case 'Happy':
-                let options_happy = [
-                    'You could cook something', // hier was aufwändiges vorschlagen
-                    'Hey, I know a cool movie. Wanna watch it?',
-                    'You could do the big shopping', // TODO wording
-                    'Why dont you invite your friends over',
-                ];
-                emotionBasedOptions = options_happy;
-                break;
-            case 'Sad':
-                let options_sad = [
-                    'I have the feeling that you could need some Vitamine D. How about you cook some Salmon Salad?',
-                    'Shall i play some music for you?', // happy music
-                    'You could read a book', // evtl hier ein Buch zum Kauf vorschlagen
-                ];
-                emotionBasedOptions = options_sad;
-                break;
-            case 'Surprise':
-                let options_surprised = [
-                    'Are you ok? You look upset. Did you break something?',
-                ];
-                emotionBasedOptions = options_surprised;
-                break;
-            case 'Neutral':
-            default:
-                let options_neutral = [
-                    'You could read a book', // evtl hier ein Buch zum Kauf vorschlagen
-                    'Shall i play some music for you?', // ranodom
-                    'You could do the big shopping', // TODO wording
-                ];
-                emotionBasedOptions = options_neutral;
-                break;
+            console.log('# suggest activity');
+            console.log(JSON.stringify(emotion));
+            let emotionBasedOptions = [''];
+            switch (emotion.emotion) {
+                case 'Angry':
+                    let options_angry = [
+                        'How abaout a warm bath?',
+                        'Shall i play some music for you?', // calming music
+                        'You could do some sport'
+                    ];
+                    emotionBasedOptions = options_angry;
+                    break;
+                case 'Disgust':
+                    let options_disgust = [
+                        'You seem to not feel well. How about a cup of stomach tea?', // TODO wording
+                    ];
+                    emotionBasedOptions = options_disgust;
+                    break;
+                case 'Fear':
+                    let options_fear = [
+                        'How about a cup of camomile tea?',
+                    ];
+                    emotionBasedOptions = options_fear;
+                    break;
+                case 'Happy':
+                    let options_happy = [
+                        'You could cook something', // hier was aufwändiges vorschlagen
+                        'Hey, I know a cool movie. Wanna watch it?',
+                        'You could do the big shopping', // TODO wording
+                        'Why dont you invite your friends over',
+                    ];
+                    emotionBasedOptions = options_happy;
+                    break;
+                case 'Sad':
+                    let options_sad = [
+                        'I have the feeling that you could need some Vitamine D. How about you cook some Salmon Salad?',
+                        'Shall i play some music for you?', // happy music
+                        'You could read a book', // evtl hier ein Buch zum Kauf vorschlagen
+                    ];
+                    emotionBasedOptions = options_sad;
+                    break;
+                case 'Surprise':
+                    let options_surprised = [
+                        'Are you ok? You look upset. Did you break something?',
+                    ];
+                    emotionBasedOptions = options_surprised;
+                    break;
+                case 'Neutral':
+                default:
+                    let options_neutral = [
+                        'You could read a book', // evtl hier ein Buch zum Kauf vorschlagen
+                        'Shall i play some music for you?', // ranodom
+                        'You could do the big shopping', // TODO wording
+                    ];
+                    emotionBasedOptions = options_neutral;
+                    break;
+            }
+            console.log(JSON.stringify(emotionBasedOptions));
+            speakOutput = emotionBasedOptions[Math.floor(Math.random() * emotionBasedOptions.length)];
+            console.log(speakOutput);
+        } catch(e){
+            speakOutput = 'sorry there was an error with your request';
+            console.log(e);
         }
-        console.log(JSON.stringify(emotionBasedOptions));
-        speakOutput = emotionBasedOptions[Math.floor(Math.random()*emotionBasedOptions.length)];
-        console.log(speakOutput);
-
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .getResponse();
